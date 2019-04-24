@@ -1,0 +1,5 @@
+---
+php7_shipped_version:
+  bionic: '7.2'
+  stretch: '7.0'
+...

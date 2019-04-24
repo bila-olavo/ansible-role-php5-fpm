@@ -1,0 +1,139 @@
+---
+
+- name: etckeeper test
+  etckeeper_check:
+
+- name: install dependency packages
+  apt:
+    state: present
+    name:
+    - apt-transport-https
+    - lsb-release
+    update_cache: yes
+    cache_valid_time: "{{ apt_cache_valid_time|default(86400) }}"  # 24h
+
+- name: set php5_version to default if not defined
+  set_fact:
+    php5_version: "{{ php5_shipped_version[ansible_distribution_release] }}"
+  when:
+  - php5_version is not defined
+  - ansible_distribution_release in php5_shipped_version
+
+- name: make sure version is a string
+  set_fact:
+    php5_version: "{{ php5_version|string() }}"
+  when:
+  - php5_version is defined
+
+- name: fail on invalid / undefined PHP version
+  fail:
+    msg: "Invalid or undefined php5_version: {{ php5_version|default('undefined') }}"
+  when:
+  - ansible_distribution_release == "bionic" and php5_version != php5_shipped_version['bionic']
+
+# PHP7 Repository for Debian only
+- block:
+  - name: Add packages.sury.org repository key
+    apt_key:
+      id: "15058500A0235D97F5D10063B188E2B695BD4743"
+      keyring: /etc/apt/trusted.gpg.d/php7.gpg
+      url: "{{ php7_apt_key_url }}"
+      state: present
+
+  - name: Add php7 repository
+    apt_repository:
+      repo: "deb {{ php7_repo_url }} {{ ansible_distribution_release }} main"
+      filename: "php7"
+
+  when: (ansible_distribution_release == "jessie") or
+        (ansible_distribution_release == "wheezy") or
+        (ansible_distribution_release == "stretch" and php5_version != '7.0')
+# end block
+
+- name: Install php5-cli package
+  apt:
+    state: present
+    name: "php{{ php5_version }}-cli"
+    update_cache: yes
+    cache_valid_time: "{{ apt_cache_valid_time|default(86400) }}"  # 24h
+  when: php5_cli
+
+- name: Install php5-fpm package
+  apt:
+    state: present
+    name: "php{{ php5_version }}-fpm"
+    update_cache: yes
+    cache_valid_time: "{{ apt_cache_valid_time|default(86400) }}"  # 24h
+  when: php5_fpm
+
+- name: Enable php5-fpm service
+  systemd:
+    name: "php{{ php5_version }}-fpm"
+    enabled: yes
+    daemon_reload: yes
+  when: php5_fpm
+
+#  systemd seems to be buggy
+- name: Ensure enabled php5-fpm
+  command: "systemctl enable php{{ php5_version }}-fpm"
+  changed_when: false
+  when: php5_fpm
+
+- name: install additional php5 modules (if defined)
+  apt:
+    state: present
+    name: "{{ php5_modules }}"
+    update_cache: yes
+    cache_valid_time: "{{ apt_cache_valid_time|default(86400) }}"  # 24h
+  when: php5_modules is defined
+  notify: restart php5-fpm
+
+- name: set cli php.ini parameters
+  lineinfile:
+    dest: /etc/php/{{ php5_version }}/cli/php.ini
+    regexp: '^;? ?{{ item.key }} = '
+    line: '{{ item.key }} = {{ item.value }}'
+  with_dict: "{{ php5_cli_ini | default({}) }}"
+  when: php5_cli
+
+- name: set fpm php.ini parameters
+  lineinfile:
+    dest: /etc/php/{{ php5_version }}/fpm/php.ini
+    regexp: '^;? ?{{ item.key }} = '
+    line: '{{ item.key }} = {{ item.value }}'
+  with_dict: "{{ php5_fpm_ini | default({}) }}"
+  notify: reload php5-fpm
+  when: php5_fpm
+
+- name: set php fpm global options
+  lineinfile:
+    dest: /etc/php/{{ php5_version }}/fpm/php-fpm.conf
+    regexp: '^;? ?{{ item.key }} = '
+    line: '{{ item.key }} = {{ item.value }}'
+  with_dict: "{{ php5_fpm_conf | default({}) }}"
+  notify: reload php5-fpm
+  when: php5_fpm
+
+- name: set php fpm parameters for pool www.conf
+  lineinfile:
+    dest: /etc/php/{{ php5_version }}/fpm/pool.d/www.conf
+    regexp: '^;? ?{{ item.key }} = '
+    line: '{{ item.key }} = {{ item.value }}'
+  with_dict: "{{ php5_fpm_pool_ini | default({}) }}"
+  notify: reload php5-fpm
+  when: php5_fpm
+
+- name: Set up health pool
+  template:
+    src: health.conf
+    dest: "/etc/php/{{ php5_version }}/fpm/pool.d/health.conf"
+    mode: "0644"
+    owner: root
+    group: root
+  when: php5_fpm and php5_health_pool|default(False)
+
+- name: etckeeper post task
+  etckeeper:
+    msg: "autocommit after ansible-role-php5-fpm"
+
+...

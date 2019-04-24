@@ -1,0 +1,27 @@
+---
+
+galaxy_info:
+  author: Olavo Queiroz <olavo.guimaraes@aboutyou.de>
+  contributors:
+  - Markus Rekkenbeil <markus.rekkenbeil@project-collins.com>
+  - Andre Lohmann <lohmann.andre@gmail.com>
+  - Per H. <github.com/perfide>
+  description: Deploy and configure php5-cli/fpm
+  company: Project Collins GmbH
+  license: Apache License 2.0+ (FIXME unapproved)
+  min_ansible_version: 1.7
+  platforms:
+  - name: Debian
+    versions:
+    - jessie
+    - wheezy
+    - stretch
+  - name: Ubuntu
+    versions:
+    - bionic
+  galaxy_tags:
+  - php
+  - php5-cli
+  - php5-fpm
+
+...

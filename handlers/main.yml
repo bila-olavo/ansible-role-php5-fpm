@@ -1,0 +1,15 @@
+---
+
+- name: reload php5-fpm
+  service:
+    name: "php{{ php5_version }}-fpm"
+    state: reloaded
+  when: php5_fpm
+
+- name: restart php5-fpm
+  service:
+    name: "php{{ php5_version }}-fpm"
+    state: restarted
+  when: php5_fpm
+
+...
