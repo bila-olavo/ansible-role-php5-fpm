@@ -1,6 +1,6 @@
 ---
-php7_apt_key_url: https://packages.sury.org/php/apt.gpg
-php7_cli: false
-php7_fpm: true
-php7_repo_url: https://packages.sury.org/php
+php5_apt_key_url: https://packages.sury.org/php/apt.gpg
+php5_cli: false
+php5_fpm: true
+php5_repo_url: https://packages.sury.org/php
 ...

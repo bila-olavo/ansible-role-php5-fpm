@@ -31,19 +31,19 @@
   when:
   - ansible_distribution_release == "bionic" and php5_version != php5_shipped_version['bionic']
 
-# PHP7 Repository for Debian only
+# Adding Sury repo
 - block:
   - name: Add packages.sury.org repository key
     apt_key:
       id: "15058500A0235D97F5D10063B188E2B695BD4743"
-      keyring: /etc/apt/trusted.gpg.d/php7.gpg
-      url: "{{ php7_apt_key_url }}"
+      keyring: /etc/apt/trusted.gpg.d/php5.gpg
+      url: "{{ php5_apt_key_url }}"
       state: present
 
-  - name: Add php7 repository
+  - name: Add php5 repository
     apt_repository:
-      repo: "deb {{ php7_repo_url }} {{ ansible_distribution_release }} main"
-      filename: "php7"
+      repo: "deb {{ php5_repo_url }} {{ ansible_distribution_release }} main"
+      filename: "php5"
 
   when: (ansible_distribution_release == "jessie") or
         (ansible_distribution_release == "wheezy") or
