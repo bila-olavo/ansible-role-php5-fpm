@@ -10,8 +10,21 @@ Ansible Galaxy Playbook for php5
 `php5_modules` a list of php packages to install
 
     php5_modules:
-    - php5.0-apcu
-    - php5.0-redis
+    - php-apcu
+    - php-pear
+    - php5.6-mysql
+    - php5.6-mbstring
+    - php5.6-soap
+    - php5.6-curl
+    - php5.6-gd
+    - php5.6-gmp
+    - php5.6-intl
+    - php5.6-json
+    - php5.6-mcrypt
+    - php5.6-mysql
+    - php5.6-readline
+    - php5.6-dev
+    - php5.6-xml
 
 `php5_fpm_conf` is a dictionary of key/value pairs for the `fpm/php-fpm.conf` global config
 
@@ -35,4 +48,4 @@ Ansible Galaxy Playbook for php5
 
 `php5_health_pool` boolean, if true, an additional pool is created for health
 checks, using the socket /var/run/php{{php_version}}-fpm-health.sock, e.g.
-`/var/run/php5.2-fpm-health.sock`
+`/var/run/php/php5.6-fpm.sock`
